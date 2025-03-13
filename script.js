@@ -1,26 +1,27 @@
 let clickCount = 0;
 
-const countryInput = document.getElementById('country');
-const myForm = document.getElementById('form');
-const modal = document.getElementById('form-feedback-modal');
-const clicksInfo = document.getElementById('click-count');
-
-function handleClick() {
+document.addEventListener('click', () => {
     clickCount++;
-    clicksInfo.innerText = clickCount;
-}
+    document.getElementById('click-count').innerText = clickCount;
+});
+
+document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Formularz wysłany!');
+});
 
 async function fetchAndFillCountries() {
     try {
         const response = await fetch('https://restcountries.com/v3.1/all');
-        if (!response.ok) {
-            throw new Error('Błąd pobierania danych');
-        }
         const data = await response.json();
-        const countries = data.map(country => country.name.common);
-        countryInput.innerHTML = countries.map(country => `<option value="${country}">${country}</option>`).join('');
+        const countryList = document.getElementById('countryList');
+        data.forEach(country => {
+            let option = document.createElement('option');
+            option.value = country.name.common;
+            countryList.appendChild(option);
+        });
     } catch (error) {
-        console.error('Wystąpił błąd:', error);
+        console.error('Błąd pobierania krajów:', error);
     }
 }
 
@@ -28,37 +29,46 @@ function getCountryByIP() {
     fetch('https://get.geojs.io/v1/ip/geo.json')
         .then(response => response.json())
         .then(data => {
-            const country = data.country;
-            // TODO inject country to form and call getCountryCode(country) function
+            document.getElementById('country').value = data.country;
+            getCountryCode(data.country);
+            if (data.postal) {
+                document.getElementById('zipCode').value = data.postal;
+            }
         })
-        .catch(error => {
-            console.error('Błąd pobierania danych z serwera GeoJS:', error);
-        });
+        .catch(error => console.error('Błąd pobierania lokalizacji:', error));
 }
 
 function getCountryCode(countryName) {
-    const apiUrl = `https://restcountries.com/v3.1/name/${countryName}?fullText=true`;
-
-    fetch(apiUrl)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Błąd pobierania danych');
-        }
-        return response.json();
-    })
-    .then(data => {        
-        const countryCode = data[0].idd.root + data[0].idd.suffixes.join("")
-        // TODO inject countryCode to form
-    })
-    .catch(error => {
-        console.error('Wystąpił błąd:', error);
-    });
+    fetch(`https://restcountries.com/v3.1/name/${countryName}?fullText=true`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('countryCode').innerText = data[0].idd.root + data[0].idd.suffixes.join("");
+        })
+        .catch(error => console.error('Błąd pobierania kodu:', error));
 }
 
+// Automatyczne formatowanie kodu pocztowego
+document.getElementById('zipCode').addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\D/g, ''); // Usuwa wszystko, co nie jest cyfrą
+    if (value.length > 2) {
+        value = value.slice(0, 2) + '-' + value.slice(2, 5);
+    }
+    e.target.value = value.slice(0, 6);
+});
 
-(() => {
-    // nasłuchiwania na zdarzenie kliknięcia myszką
-    document.addEventListener('click', handleClick);
+// Automatyczne formatowanie numeru telefonu
+document.getElementById('phoneNumber').addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\D/g, ''); // Usuwa wszystko, co nie jest cyfrą
+    if (value.length > 3) {
+        value = value.slice(0, 3) + '-' + value.slice(3);
+    }
+    if (value.length > 7) {
+        value = value.slice(0, 7) + '-' + value.slice(7);
+    }
+    e.target.value = value.slice(0, 11);
+});
 
+document.addEventListener('DOMContentLoaded', () => {
     fetchAndFillCountries();
-})()
+    getCountryByIP();
+});

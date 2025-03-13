@@ -1,3 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+.container {
+    max-width: 500px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+#zipCode {
+    max-width: 200px;
+}
+
+
+.form-control, .form-select {
+    margin-bottom: 10px;
+}
+
+button {
+    width: 100%;
+}
+
 .modal {
-    background: #c6d0ff7a;
+    background: rgba(0, 0, 0, 0.5);
 }
